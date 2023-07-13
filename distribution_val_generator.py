@@ -19,14 +19,14 @@ def common_noise_sampler(common_dist, noise_dist):
 REGULAR = {
     "BETA_1_1": beta(1, 1),
     "BETA_3_3": beta(3, 3),
-    "BETA_6, 6": beta(6, 6),
+    "BETA_6_6": beta(6, 6),
     "BETA_10_10": beta(10, 10),
     "BETA_1_3": beta(1, 3),
     "BETA_1_6": beta(1, 6),
-    "BETA_1,10": beta(1, 10),
-    "BETA_3,1": beta(3, 1),
-    "BETA_6,1": beta(6, 1),
-    "BETA_10,1": beta(10, 1),
+    "BETA_1_10": beta(1, 10),
+    "BETA_3_1": beta(3, 1),
+    "BETA_6_1": beta(6, 1),
+    "BETA_10_1": beta(10, 1),
 }
 
 COMMON = {

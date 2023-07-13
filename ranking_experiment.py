@@ -148,7 +148,7 @@ def allocation_statistics(item_list, num_agents):
 
 
 def run_on_dataset(dataset_file):
-    dataset_name = dataset_file.rsplit(',')[0]  # Remove extension
+    dataset_name = dataset_file.rsplit('.')[0]  # Remove extension
     dataset = np.load(f'item_vals/{dataset_file}')
 
     rows = []
