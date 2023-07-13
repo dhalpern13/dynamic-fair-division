@@ -20,7 +20,7 @@ REGULAR = {
     "BETA_1_1": beta(1, 1),
     "BETA_3_3": beta(3, 3),
     "BETA_6, 6": beta(6, 6),
-    "B_10_10": beta(10, 10),
+    "BETA_10_10": beta(10, 10),
     "BETA_1_3": beta(1, 3),
     "BETA_1_6": beta(1, 6),
     "BETA_1,10": beta(1, 10),
@@ -30,9 +30,9 @@ REGULAR = {
 }
 
 COMMON = {
-    "UNIF_0,.2_UNIF_0,.8": (uniform(0, .2), uniform(0, .8)),
-    "UNIF_0,.5_UNIF_0,.5": (uniform(0, .5), uniform(0, .5)),
-    "UNIF_0,.8+UNIF_0,.2": (uniform(0, .8), uniform(0, .2))
+    "UNIF_COR_2_8": (uniform(0, .2), uniform(0, .8)),
+    "UNIF_COR_5_5": (uniform(0, .5), uniform(0, .5)),
+    "UNIF_COR_8_2": (uniform(0, .8), uniform(0, .2))
 }
 
 if __name__ == '__main__':
