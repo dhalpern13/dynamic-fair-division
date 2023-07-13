@@ -176,7 +176,7 @@ def main():
         columns=['dataset', 'num_agents', 'alg', 'timestep'] + stats_columns).to_csv(FILE, index=False)
     files = os.listdir('item_vals')
     if MULTI_PROCESSSING:
-        process_map(run_on_dataset, files)
+        process_map(run_on_dataset, files, chunksize=5)
     else:
         for data_set in tqdm(files):
             run_on_dataset(data_set)
