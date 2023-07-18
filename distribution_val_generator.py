@@ -1,20 +1,9 @@
+import os
+
 import numpy as np
 from scipy.stats import beta, uniform
 
 np.random.seed(0)
-def dist_to_sampler(dist):
-    def sample_item(num_agents):
-        return tuple(dist.rvs(num_agents))
-
-    return sample_item
-
-
-def common_noise_sampler(common_dist, noise_dist):
-    def sample_item(num_agents):
-        return tuple(common_dist.rvs(1) + noise_dist.rvs(num_agents))
-
-    return sample_item
-
 
 REGULAR = {
     "BETA_1_1": beta(1, 1),
@@ -38,6 +27,9 @@ COMMON = {
 if __name__ == '__main__':
     n = 5
     m = 100_000
+    if not os.path.exists('item_vals'):
+        os.mkdir('item_vals')
+
     for iteration in range(100):
         for name, dist in REGULAR.items():
             sample = dist.rvs((m, n))

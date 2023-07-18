@@ -9,30 +9,30 @@ from tqdm import tqdm
 from tqdm.contrib.concurrent import process_map
 
 from algorithms import ranking_alg, ranking_alg_with_sample_epochs, compare_to_everything, welfare_maximizing, \
-    deterministic_squareroot, quantile_maximizing
+    quantile_maximizing
 
 NUM_AGENTS = [2, 5]
 
 FILE = 'data/dynamic-fair-division.csv'
 
-TIME_STEPS = {int(i) for i in
-              np.logspace(0, 5, num=100)}  # Up to 10^5, 100 timesteps (with some duplicates due to rounding).
+# Up to 10^5, 100 timesteps.
+TIME_STEPS = {int(i) for i in np.logspace(0, 5, num=100)}
 
-TOTAL_ITEMS = {
-    'total_items': 100_000
-}
+TOTAL_ITEMS = {'total_items': 100_000}
 
+# Epoch length parameters
 EPOCHS = {
     'shorter': {
-        'sampling_length': lambda epoch: epoch ** 2,
-        'exploiting_length': lambda epoch: epoch ** 4
+        'sampling_length_func': lambda epoch: epoch ** 2,
+        'exploiting_length_func': lambda epoch: epoch ** 4
     },
     'longer': {
-        'sampling_length': lambda epoch: epoch ** 4,
-        'exploiting_length': lambda epoch: epoch ** 8
+        'sampling_length_func': lambda epoch: epoch ** 4,
+        'exploiting_length_func': lambda epoch: epoch ** 8
     },
 }
 
+# Epoch sampling parameters
 EPOCH_SAMPLING = {
     'regular': {
         'sample_prob_func': lambda item, num_agents: sqrt(item) / item * num_agents if item / num_agents >= 20 else 1,
@@ -41,6 +41,7 @@ EPOCH_SAMPLING = {
     }
 }
 
+# Algorithms to run along with additional parameters.
 ALGS = {
     'normal-short': (ranking_alg, {'compare_to_all': False} | EPOCHS['shorter'] | TOTAL_ITEMS),
     'normal-long': (ranking_alg, {'compare_to_all': False} | EPOCHS['longer'] | TOTAL_ITEMS),
@@ -55,59 +56,19 @@ ALGS = {
 
 MULTI_PROCESSSING = True
 
-
-def welfare_approximations(item_list):
-    cur_max_welfare = 0
-    cur_welfare = 0
-    welfare_approxes = []
-    for receiving_agent, item in item_list:
-        cur_max_welfare += max(item)
-        cur_welfare += item[receiving_agent]
-        welfare_approxes.append(cur_welfare / cur_max_welfare)
-    return welfare_approxes
-
-
-def envies(item_list, num_agents):
-    bundle_values = np.zeros((num_agents, num_agents))
-
-    agent_1_envies_2 = []
-    agent_n_envies_1 = []
-    is_ef = []
-    agent_1_1_val_per_item = []
-    agent_1_n_val_per_item = []
-
-    for receiving_agent, item in item_list:
-        for agent in range(num_agents):
-            bundle_values[agent, receiving_agent] += item[agent]
-        agent_1_envies_2.append(bundle_values[0, 0] - bundle_values[0, 1])
-        agent_n_envies_1.append(bundle_values[-1, -1] - bundle_values[-1, 0])
-        is_ef.append(
-            int(all(bundle_values[i, i] >= bundle_values[i, j] for i, j in product(range(num_agents), repeat=2))))
-    return agent_1_envies_2, agent_n_envies_1, is_ef
-
-
-def bundle_sizes(item_list, num_agents):
-    agent_1_size = []
-    agent_n_size = []
-
-    agent_1_cur = 0
-    agent_n_cur = 0
-    for receiving_agent, _ in item_list:
-        if receiving_agent == 0:
-            agent_1_cur += 1
-        elif receiving_agent == num_agents - 1:
-            agent_n_cur += 1
-        agent_1_size.append(agent_1_cur)
-        agent_n_size.append(agent_n_cur)
-    return agent_1_size, agent_n_size
-
-
 stats_columns = ['welfare', 'envy_12', 'envy_n1', 'ef', 'bundle_size_1', 'bundle_size_n', 'val_per_item_11',
                  'val_per_item_1n']
 allocation_stats = namedtuple('allocation_stats', stats_columns)
 
 
 def allocation_statistics(item_list, num_agents):
+    """
+    item_list represents an allocation as a list of (agent, item) tuples. Recall, an agent is just
+    an integer {0,...,n-1} and an item is represented by an n-tuple of value per item.
+
+    Returns a list of allocation_stats over time. I.e., stats[t].ef is 1 exactly when the allocation
+    is 1 an time t. Similarly, stats[t].welfare is the welfare approximation at time t.
+    """
     cur_max_welfare = 0
     cur_welfare = 0
 
@@ -148,8 +109,11 @@ def allocation_statistics(item_list, num_agents):
 
 
 def run_on_dataset(dataset_file):
-    dataset_name = dataset_file.rsplit('.')[0]  # Remove extension
+    """
+    Run all algorithms on dataset contained in item_vals
+    """
     dataset = np.load(f'item_vals/{dataset_file}')
+    dataset_name = dataset_file.rsplit('.')[0]  # Remove extension
 
     rows = []
     for num_agents, (alg_name, (alg, extra_params)) in product(NUM_AGENTS, ALGS.items()):
@@ -159,19 +123,15 @@ def run_on_dataset(dataset_file):
             if timestep not in TIME_STEPS:
                 continue
             rows.append({
-                'dataset': dataset_name,
-                'num_agents': num_agents,
-                'alg': alg_name,
-                'timestep': timestep
-            } | stats._asdict())
-    pd.DataFrame(data=rows).to_csv(FILE, index=False, float_format='%g', mode='a',
-                                   header=False)
+                            'dataset': dataset_name,
+                            'num_agents': num_agents,
+                            'alg': alg_name,
+                            'timestep': timestep
+                        } | stats._asdict())
+    pd.DataFrame(data=rows).to_csv(FILE, index=False, float_format='%g', mode='a', header=False)
 
 
 def main():
-    if os.path.exists(FILE):
-        print('file exists')
-        # exit(0)
     pd.DataFrame(
         columns=['dataset', 'num_agents', 'alg', 'timestep'] + stats_columns).to_csv(FILE, index=False)
     files = os.listdir('item_vals')
